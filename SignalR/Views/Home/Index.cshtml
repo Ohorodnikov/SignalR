@@ -1,0 +1,166 @@
+﻿@model SignalR.ViewModel.UserViewModel
+@{
+    ViewData["Title"] = "Home Page";
+}
+
+<script type="text/javascript">
+    if (typeof Promise === 'undefined') {
+        document.write('<script type="text/javascript" src="js/signalr-clientES5-1.0.0-alpha2-final.js"><\/script>');
+    }
+    else {
+
+        document.write('<script type="text/javascript" src="js/signalr-client-1.0.0-alpha2-final.js"><\/script>');
+    }
+</script>
+
+
+
+
+<div id="registerForm">
+    <input type="text" id="name" />
+    <input type="button" id="regBtn" value="Register" onclick="register()" />
+</div>
+<div id="inputForm">
+    <input type="text" id="message" />
+    <input type="button" id="sendBtn" value="Отправить" onclick="sendMessage()"/>
+</div>
+@if (Model.Roles.Contains("Student"))
+{
+    <div id="loadForm">
+        <input type="file" id="image-file" />
+    </div>
+}
+
+<div id="counterForm">
+    <label id="counter">0</label>
+</div>
+<div id="chatroom"></div>
+
+@section Scripts{ 
+    
+    <script>
+        var connection = new signalR.HubConnection('/chat');
+
+        var name = '';
+
+        function register() {
+            name = document.getElementById("name").value;
+        }
+
+        function sendMessage() {
+            var msg = document.getElementById("message").value;
+            connection.invoke('Send', msg, name);
+        }
+        
+        function sendText(text) {
+
+            connection.invoke('SendFile', text, name);
+        }
+
+        function imageClick() {
+            var label = document.getElementById("counter");
+            var newVal = parseInt(label.textContent, 10) + 1;
+            connection.invoke('Send', "Image clicked", name);
+            connection.invoke('UpdateCounter', newVal);
+        }
+
+        connection.on('Update', function (newValue) {
+            document.getElementById("counter").innerText = newValue;
+         });
+
+        connection.on('File', function (data, user) {
+            let userNameElem = document.createElement("b");
+            userNameElem.appendChild(document.createTextNode(user + ': '));
+
+            let elem = document.createElement("div");
+            elem.appendChild(userNameElem);
+            var img = document.createElement("img");
+            img.setAttribute("src", "data:image / png;base64, " + data);
+            img.setAttribute("width", 100);
+            img.setAttribute("height", 100);
+            img.onclick = function () { imageClick() };
+            elem.appendChild(img);
+            
+            var firstElem = document.getElementById("chatroom").firstChild;
+            document.getElementById("chatroom").insertBefore(elem, firstElem);
+        });
+
+        connection.on('Sent', function (message, user) {
+            let userNameElem = document.createElement("b");
+            userNameElem.appendChild(document.createTextNode(user + ': '));
+
+            // создает элемент <p> для сообщения пользователя
+            let elem = document.createElement("p");
+            elem.appendChild(userNameElem);
+            elem.appendChild(document.createTextNode(message));
+
+            var firstElem = document.getElementById("chatroom").firstChild;
+            document.getElementById("chatroom").insertBefore(elem, firstElem);
+        });
+
+        connection.start();
+        
+        $('#image-file').change(function ()
+        { 
+            debugger;
+            var file = this.files[0];
+            if (file) {
+                var reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = function () {
+                    var formData = new FormData();                    
+                    formData.append('file', file);
+                    $.ajax({
+                        url: 'Home/SaveImage/',
+                        type: 'post',
+                        dataType: 'html',
+                        contentType: false,
+                        processData: false,
+                        data: formData,
+                        success: function (imageId) {
+                            sendText(imageId);
+                        }
+                    });
+                };
+            }
+        });
+
+
+        
+    </script>
+}
+
+       
+        @*<script>
+            // Start the connection
+            $.connection.hub.start().done(function () {
+                hub.server.getImagesCount(getSessionCode());
+                hub.server.reconnectToSession(getSessionCode());
+                hub.server.getUsersProfileImages(getSessionCode());
+                hub.server.getRibPermission(getSessionCode());
+                hub.server.checkIfVoted(getSessionCode());
+            }).fail(function (error) {
+
+            });
+            $.connection.hub.disconnected(function () {
+                setTimeout(function () {
+                    $.connection.hub.start().done(function () {
+                        hub.server.getImagesCount(getSessionCode());
+                        hub.server.reconnectToSession(getSessionCode());
+                        hub.server.getUsersProfileImages(getSessionCode());
+                        hub.server.getRibPermission(getSessionCode());
+                        hub.server.checkIfVoted(getSessionCode());
+                    }, 2000); // Restart connection after 5 seconds.
+                });
+            });
+        </script>
+        <script>
+            var hub = $.connection.learningAgendaHub;
+            $.connection.hub.logging = false;
+            hub.client.ShowAlert = function (text) {
+                alert(text);
+            };
+        </script>*@
+
+
+

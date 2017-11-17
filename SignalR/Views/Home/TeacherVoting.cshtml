@@ -1,0 +1,73 @@
+﻿@model SignalR.ViewModel.VoteViewModel
+@{
+    ViewData["Title"] = "TeacherVouting";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<h2>TeacherVouting</h2>
+@{
+    var maxColCount = 5;
+    var imageCount = Model.Images.Count;
+}
+<table id="imageTable" class="table table-bordered">
+    @{
+        var counter = 0;
+    }
+    @for (int j = 0; j < imageCount / maxColCount + 1; j++)
+    {
+
+        @if (counter >= imageCount)
+        {
+            continue;
+        }
+        <tr>
+            @for (int i = 0; i < maxColCount; i++)
+            {
+                @if (counter >= imageCount)
+                {
+                    continue;
+                }
+                else
+                {
+                    var image = Model.Images[counter];
+                    counter++;
+                    <td id="@("image-cell-"+ image.Id)">
+                        <div class="elem-val text-center">
+                            <img src="data:image / png;base64, @image.Base64" width="100" height="100" />
+                        </div>
+                        <span id="@("dislike-" + image.Id)" class="remove-img-val">
+                            <span class="glyphicon glyphicon-remove pull-left"></span>
+                        </span>
+                        <label id="@("dislikeLabel-" + image.Id)" class="pull-left">@image.DislikesCount</label>
+                        <span id="@("like-" + image.Id)" class="remove-img-val">
+                            <span class="glyphicon glyphicon-ok pull-right"></span>
+                        </span>
+                        <label id="@("likeLabel-" + image.Id)" class="pull-right">@image.LikesCount</label>
+                    </td>
+                }
+            }
+
+        </tr>
+    }
+</table>
+
+
+<script>
+    var connection = new signalR.HubConnection('/chat');
+
+    connection.on('Like', function (imageId) {
+        var label = document.getElementById("likeLabel-" + imageId);
+        var value = parseInt(label.textContent);
+        value++;
+        label.innerHTML = value;
+    });
+
+    connection.on('Dislike', function (imageId) {
+        var label = document.getElementById("dislikeLabel-" + imageId);
+        var value = parseInt(label.textContent);
+        value++;
+        label.innerHTML = value;
+    });
+
+    connection.start().then(() => connection.invoke('ReRegister', '@Model.User.Session.SessionCode'));
+</script>

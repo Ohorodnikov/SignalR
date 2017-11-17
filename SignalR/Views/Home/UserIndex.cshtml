@@ -1,0 +1,109 @@
+﻿
+@{
+    ViewData["Title"] = "UserIndex";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<h2>UserIndex</h2>
+
+<div id="loadForm">
+    <input type="file" id="image-file" onmouseover=""/>
+</div>
+<div id="errorPanel" class="alert alert-danger hidden">
+    Image Limit
+</div>
+
+<input type="text" id="groupName" />
+<input type="button" onclick="register()" value="Register" />
+<div id="chatroom"></div>
+
+@section Scripts{ 
+<script>
+
+    var connection = new signalR.HubConnection('/chat');
+
+    function register() {
+        var code = document.getElementById("groupName").value;
+        connection.invoke("JoinGroup", code);       
+    };
+
+    //Send
+    function sendText(base64, id) {
+        connection.invoke('SendFile', base64, id, name);
+    }
+
+    connection.on('Voting', function (sessionCode)
+    {
+        window.location.href = "@Url.Action("Voting", "Home")?sessionCode="+sessionCode;
+    });
+
+    //Get
+    connection.on('File', function (base64, id, user) {
+        let userNameElem = document.createElement("b");
+        userNameElem.appendChild(document.createTextNode(user + ': '));
+
+        let elem = document.createElement("div");
+        elem.appendChild(userNameElem);
+        var img = document.createElement("img");
+        img.setAttribute("src", "data:image / png;base64, " + data);
+        img.setAttribute("width", 100);
+        img.setAttribute("height", 100);
+        //img.onclick = function () { imageClick() };
+        elem.appendChild(img);
+
+        var firstElem = document.getElementById("chatroom").firstChild;
+        document.getElementById("chatroom").insertBefore(elem, firstElem);
+    });
+
+    connection.on('Join', function (message) {
+        
+        // создает элемент <p> для сообщения пользователя
+        let elem = document.createElement("p");
+        
+        elem.appendChild(document.createTextNode(message));
+
+        var firstElem = document.getElementById("chatroom").firstChild;
+        document.getElementById("chatroom").insertBefore(elem, firstElem);
+    });
+
+    connection.start();
+
+    $('#image-file').change(function () {
+        debugger;
+        var file = this.files[0];
+        if (file) {
+            var reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = function () {
+                var formData = new FormData();
+                formData.append('file', file);
+                debugger;
+                $.ajax({
+                    url: 'Home/SaveImage/',
+                    type: 'post',
+                    dataType: 'html',
+                    contentType: false,
+                    processData: false,
+                    data: formData,
+                    success: function (data) {
+                        debugger;
+                        var returnedData = JSON.parse(data);
+                        let id = returnedData.imageId;
+                        let base64 = returnedData.image;
+                        if (data.includes("limit")) {
+                            $('#errorPanel').removeClass('hidden');
+                            $('#errorPanel').css("display", "block");
+                            $('#errorPanel').fadeOut(5000);
+                        }
+                        else {
+                            sendText(base64, id);
+                        }
+                    }
+                });
+            };
+        }
+        $("#image-file").val("");
+    });
+
+</script>
+}

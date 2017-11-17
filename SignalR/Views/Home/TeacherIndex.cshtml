@@ -1,0 +1,211 @@
+﻿@model SignalR.ViewModel.UserViewModel
+@{
+    ViewData["Title"] = "Teacher";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="page-header">
+    <h3> @ViewData["Title"]</h3>
+</div>
+
+@{ 
+    var maxColCount = 5;
+}
+<div class="row"> 
+    <div class="col-lg-4">
+        <div class="panel panel-default well">
+            <div class="text-center">
+                <div class="row">
+                    <label class="h4">Session Code:</label>
+                    <label id="sessionCode" class="h4"></label>
+                </div>
+                <div class="row">
+                    <input type="button" value="Start session" onclick="startSession()" class="btn btn-primary" />
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="panel panel-default well">
+            <div class="text-center">                
+                <div id="chatroom"></div>
+            </div>
+        </div>        
+    </div>
+    <div class="col-lg-4">
+        <div class="panel panel-default well">
+            <div class="text-center">
+                <input type="button" value="Start vouting" id="startVoutingButton" onclick="startVouting()" class="btn btn-success disabled" />
+            </div>
+        </div>        
+    </div>
+</div>
+
+
+
+<table id="imageTable" class="table table-striped table-bordered">
+    @{ 
+        var counter = 0;
+    }
+    @for (int j = 0; j < Model.User.Images.Count / maxColCount + 1; j++)
+    {
+        @if (counter >= Model.User.Images.Count)
+        {
+            continue;
+        }
+        <tr id="@("tr-" + j)">
+            
+            @for (int i = 0; i < maxColCount; i++)
+            {
+                @if (counter >= Model.User.Images.Count)
+                {
+                    continue;
+                }
+                else
+                {
+                    var image = Model.User.Images[counter];
+                    counter++;
+                    <td id="@("image-cell-"+ image.Id)">   
+                        <div class="row">                            
+                            <div class="col-lg-10">
+                                <div class="elem-val">
+                                    <img src="data:image / png;base64, @image.Base64" class="img-responsive" />
+                                </div>
+                            </div>
+                            <div class="col-lg-2">
+                                <span id="@("image-" + image.Id)" class="remove-img-val pull-right" onclick="removeImage(@j, @i, @image.Id)">
+                                    <span class="glyphicon glyphicon-remove"></span>
+                                </span>
+                            </div>
+                        </div>
+                    </td>                    
+                }
+            }            
+        </tr>
+    }
+    
+</table>
+
+
+
+
+<script>
+
+    function startSession() {
+        connection.invoke('Start');
+    };
+
+    function removeImage(trId, tdId, id) {
+        debugger;
+        var model = {
+            imgId: id
+        }
+        $.ajax({
+            url: 'Home/RemoveImage/',
+            type: 'post',
+            dataType: "json",
+            data: model,
+            success: function (result) {
+                var table = document.getElementById("imageTable");
+                table.rows[trId].deleteCell(tdId);
+            }
+        });
+    }
+
+    //function showPopupRemove() {
+    //    $(this).css("background-color", "#d2d2d2");
+    //    $(this).find(".remove-img-val").css('display', 'inline-block');
+
+    //}
+
+    //function hidePopupRemove() {
+    //    $(this).css("background-color", "white");
+    //    $(this).find(".remove-img-val").css('display', 'none');
+    //}
+
+    var connection = new signalR.HubConnection('/chat');
+
+    function startVouting() {
+        var sessionCode = document.getElementById("sessionCode").textContent;
+        connection.invoke("StartVoting", sessionCode);
+    }
+
+    connection.on('Voting', function (sessionCode)
+    {   
+        window.location.href = "@Url.Action("Voting", "Home")?sessionCode="+sessionCode;
+    });
+
+    connection.on('Join', function (text) {
+        let elem = document.createElement("p");
+
+        elem.appendChild(document.createTextNode(message));
+
+        var firstElem = document.getElementById("chatroom").firstChild;
+        document.getElementById("chatroom").insertBefore(elem, firstElem);
+
+    });
+
+    connection.on('SessionCode', function (code) {
+        document.getElementById("sessionCode").innerHTML = code;
+        $("#startVoutingButton").removeClass("disabled");
+    });
+
+    connection.on('File', function (base64, id, user) {
+        let table = document.getElementById("imageTable");
+        let rowCount = table.rows.length;
+        let lastRow = table.rows[rowCount - 1];
+        let lastRowColCount = lastRow.childElementCount;
+        debugger;
+
+        let newCell = document.createElement("td");
+        newCell.setAttribute("id", "image-cell-" + id);
+
+        var imgDiv = document.createElement("div");
+        imgDiv.setAttribute("class", "elem-val");
+        imgDiv.onmouseover = function () {
+            showPopupRemove()
+        };
+        imgDiv.onmouseleave = function () {
+            hidePopupRemove()
+        };
+
+        var img = document.createElement("img");
+        img.setAttribute("src", "data:image / png;base64, " + base64);
+        img.setAttribute("width", 100);
+        img.setAttribute("height", 100);
+        imgDiv.appendChild(img);
+
+        var span1 = document.createElement("span");
+        span1.setAttribute("id", "image-" + id);
+        span1.setAttribute("class", "remove-img-val");
+
+
+        var span2 = document.createElement("span");
+        span2.setAttribute("class", "glyphicon glyphicon-remove");
+
+        span1.appendChild(span2);
+
+        newCell.appendChild(imgDiv);
+        newCell.appendChild(span1);
+        if (lastRowColCount == @maxColCount) {
+            span1.onclick = function () {
+                removeImage(rowCount, 0, id);
+            };
+            let newRow = document.createElement("tr");
+
+            let x = newRow.insertCell(0);
+            x.appendChild(newCell);
+            table.appendChild(newRow);
+        }
+        else {
+            span1.onclick = function () {
+                removeImage(rowCount - 1, lastRowColCount, id);
+            };
+            let x = lastRow.insertCell(lastRowColCount)
+            x.appendChild(newCell);
+        }
+
+    });
+
+    connection.start();
+</script>
