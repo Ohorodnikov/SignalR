@@ -56,14 +56,16 @@
     var connection = new signalR.HubConnection('/chat');
 
     connection.on('Like', function (imageId) {
-        var label = document.getElementById("likeLabel-" + imageId);
+        debugger;
+        var label = $("#likeLabel-" + imageId)[0];
         var value = parseInt(label.textContent);
         value++;
         label.innerHTML = value;
     });
 
     connection.on('Dislike', function (imageId) {
-        var label = document.getElementById("dislikeLabel-" + imageId);
+        debugger;
+        var label = $("#dislikeLabel-" + imageId)[0];
         var value = parseInt(label.textContent);
         value++;
         label.innerHTML = value;

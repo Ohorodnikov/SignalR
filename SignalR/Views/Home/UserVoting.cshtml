@@ -13,7 +13,7 @@
 <div class="alert alert-danger hidden" id="errorPanel">
     You just have voted for this image!
 </div>
-<div id="aniimated-thumbnials">
+@*<div id="aniimated-thumbnials">
     <table id="imageTable" class="table table-bordered">
         @{
             var counter = 0;
@@ -56,12 +56,13 @@
             </tr>
         }
     </table>
-</div>
+</div>*@
 
 <div id="imagesId">
-    @foreach (var image in Model.Images.Skip(1))
+    @for (int i = 1; i < Model.Images.Count; i++)
     {
-        <input type="hidden" value="@image.Id" id="imageId-@image.Id" />
+        var image = Model.Images[i];
+        <input type="hidden" value="@image.Id" id="image-@i" data-base64=@image.Base64 data-id=@image.Id />
     }
 </div>
 <div class="panel">
@@ -78,40 +79,30 @@
         <div>
             <button id="dislike-btn-@Model.Images[0].Id" class="btn btn-danger pull-left" onclick="addVote(@Model.Images[0].Id, false)">Dislike</button>
             <button id="like-btn-@Model.Images[0].Id" class="btn btn-success pull-right" onclick="addVote(@Model.Images[0].Id, true)">Like</button>
-            @*<span id="@("dislike-" + image.Id)" class="remove-img-val">
-                <span class="glyphicon glyphicon-remove pull-left" onclick="addVote(@image.Id, false)"></span>
-            </span>*@
-            @*<label id="@("dislikeLabel-" + image.Id)" class="pull-left">@image.DislikesCount</label>*@
-            @*<span id="@("like-" + image.Id)" class="remove-img-val">
-                <span class="glyphicon glyphicon-ok pull-right" onclick="addVote(@image.Id, true)"></span>
-            </span>*@
-            @*<label id="@("likeLabel-" + image.Id)" class="pull-right">@image.LikesCount</label>*@
+            
         </div>
     </div>
 </div>
 
 
 <script>
-
     var connection = new signalR.HubConnection('/chat');
 
     connection.on('Like', function (imageId) {
-        var label = document.getElementById("likeLabel-" + imageId);
+        var label = $("#likeLabel-" + imageId);
         var value = parseInt(label.textContent);
         value++;
         label.innerHTML = value;
     });
 
     connection.on('Dislike', function (imageId) {
-        var label = document.getElementById("dislikeLabel-" + imageId);
+        var label = $("#dislikeLabel-" + imageId);
         var value = parseInt(label.textContent);
         value++;
         label.innerHTML = value;
     });
 
     function addVote(imgId, like) {
-        debugger;
-
         var model = {
             imgId: imgId,
             userId: @Model.User.Id,
@@ -138,24 +129,31 @@
                     debugger;
                     var currImgNum = $("#currImgId").text();
                     var nextImgNum = parseInt(currImgNum) + 1;
-                    @{Model.Images.RemoveAt(0); }
 
-                    $("#currImgId").text(nextImgNum);
-                    var disBtn = $("#dislike-btn-" + imgId);
-                    var likeBtn = $("#like-btn-" + imgId);
+                    if (nextImgNum == @Model.Images.Count) {
 
+                    }
+                    else {
 
-                    var firstChild = $("#imagesId").children(0)[0];
-                    debugger;
-                    var nextImgId = firstChild.value;
-                    disBtn.attr('id', 'dislike-btn-' + nextImgId);
-                    disBtn.attr('onclick', 'addVote(@Model.Images[0].Id, false)');
-                    likeBtn.attr('id', 'like-btn-' + nextImgId);
-                    likeBtn.attr('onclick', 'addVote(@Model.Images[0].Id, true)');
-                    $("#imageShow").attr('src', 'data:image/png; base64, @Model.Images[0].Base64').load(function () {
-                        this.width;   // Note: $(this).width() will not work for in memory images
+                        $("#currImgId").text(nextImgNum);
+                        var disBtn = $("#dislike-btn-" + imgId);
+                        var likeBtn = $("#like-btn-" + imgId);
 
-                    });
+                        var firstChild = $("#imagesId").children('').first();
+                        debugger;
+                        var data = firstChild.data();
+                        var nextImgId = firstChild.data().id;
+                        var nextImgBase64 = firstChild.data().base64;
+                        disBtn.attr('id', 'dislike-btn-' + nextImgId);
+                        disBtn.attr('onclick', 'addVote(' + nextImgId+', false)');
+                        likeBtn.attr('id', 'like-btn-' + nextImgId);
+                        likeBtn.attr('onclick', 'addVote(' + nextImgId + ', true)');
+                        $("#imageShow").attr('src', 'data:image/png; base64, ' + nextImgBase64).load(function () {
+                            this.width;   // Note: $(this).width() will not work for in memory images
+
+                        });
+                        firstChild.remove();
+                    }
                 }
             },
             error: function () {
