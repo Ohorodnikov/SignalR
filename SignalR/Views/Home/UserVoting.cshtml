@@ -8,54 +8,91 @@
 
 @{
     var maxColCount = 5;
+    var currentImg = 0;
 }
 <div class="alert alert-danger hidden" id="errorPanel">
     You just have voted for this image!
 </div>
-<table id="imageTable" class="table table-bordered">
-    @{
-        var counter = 0;
-        var imgCount = Model.Images.Count;
-    }
-    @for (int j = 0; j < imgCount / maxColCount + 1; j++)
-    {
-
-        @if (counter >= imgCount)
-        {
-            continue;
+<div id="aniimated-thumbnials">
+    <table id="imageTable" class="table table-bordered">
+        @{
+            var counter = 0;
+            var imgCount = Model.Images.Count;
         }
-         <tr>
-             @for (int i = 0; i < maxColCount; i++)
-             {
-                 @if (counter >= imgCount)
-                 {
-                     continue;
-                 }
-                 else
-                 {
-                     var image = Model.Images[counter];
-                     counter++;
-                     <td id="@("image-cell-"+ image.Id)">
-                         <div class="elem-val text-center">
-                             <img src="data:image / png;base64, @image.Base64" width="100" height="100" />
-                         </div>
-                         <span id="@("dislike-" + image.Id)" class="remove-img-val">
-                             <span class="glyphicon glyphicon-remove pull-left" onclick="addVote(@image.Id, false)"></span>
-                         </span>
-                         <label id="@("dislikeLabel-" + image.Id)" class="pull-left">@image.DislikesCount</label>
-                         <span id="@("like-" + image.Id)" class="remove-img-val">
-                             <span class="glyphicon glyphicon-ok pull-right" onclick="addVote(@image.Id, true)"></span>
-                         </span>
-                         <label id="@("likeLabel-" + image.Id)" class="pull-right">@image.LikesCount</label>
-                     </td>
-                 }
-             }
-             
-         </tr>
+        @for (int j = 0; j < imgCount / maxColCount + 1; j++)
+        {
+
+            @if (counter >= imgCount)
+            {
+                continue;
+            }
+            <tr>
+                @for (int i = 0; i < maxColCount; i++)
+                {
+                    @if (counter >= imgCount)
+                    {
+                        continue;
+                    }
+                    else
+                    {
+                        var image = Model.Images[counter];
+                        counter++;
+                        <td id="@("image-cell-" + image.Id)">
+                            <div class="elem-val text-center">
+                                <img src="data:image / png;base64, @image.Base64" width="100" height="100" />
+                            </div>
+                            <span id="@("dislike-" + image.Id)" class="remove-img-val">
+                                <span class="glyphicon glyphicon-remove pull-left" onclick="addVote(@image.Id, false)"></span>
+                            </span>
+                            <label id="@("dislikeLabel-" + image.Id)" class="pull-left">@image.DislikesCount</label>
+                            <span id="@("like-" + image.Id)" class="remove-img-val">
+                                <span class="glyphicon glyphicon-ok pull-right" onclick="addVote(@image.Id, true)"></span>
+                            </span>
+                            <label id="@("likeLabel-" + image.Id)" class="pull-right">@image.LikesCount</label>
+                        </td>
+                    }
+                }
+
+            </tr>
+        }
+    </table>
+</div>
+
+<div id="imagesId">
+    @foreach (var image in Model.Images.Skip(1))
+    {
+        <input type="hidden" value="@image.Id" id="imageId-@image.Id" />
     }
-</table>
+</div>
+<div class="panel">
+    <div class="panel-heading">
+        Please, vote this image
+    </div>
+    <div class="panel-body">
+        <div class="img-rounded text-center">
+            <input type="hidden" value="@Model.Images[0].Id" />
+            <label id="currImgId">1</label> / <label>@Model.Images.Count</label>
+            <br />
+            <img id="imageShow" src="data:image/png;base64, @Model.Images[0].Base64" width="400" height="400" />
+        </div>
+        <div>
+            <button id="dislike-btn-@Model.Images[0].Id" class="btn btn-danger pull-left" onclick="addVote(@Model.Images[0].Id, false)">Dislike</button>
+            <button id="like-btn-@Model.Images[0].Id" class="btn btn-success pull-right" onclick="addVote(@Model.Images[0].Id, true)">Like</button>
+            @*<span id="@("dislike-" + image.Id)" class="remove-img-val">
+                <span class="glyphicon glyphicon-remove pull-left" onclick="addVote(@image.Id, false)"></span>
+            </span>*@
+            @*<label id="@("dislikeLabel-" + image.Id)" class="pull-left">@image.DislikesCount</label>*@
+            @*<span id="@("like-" + image.Id)" class="remove-img-val">
+                <span class="glyphicon glyphicon-ok pull-right" onclick="addVote(@image.Id, true)"></span>
+            </span>*@
+            @*<label id="@("likeLabel-" + image.Id)" class="pull-right">@image.LikesCount</label>*@
+        </div>
+    </div>
+</div>
+
 
 <script>
+
     var connection = new signalR.HubConnection('/chat');
 
     connection.on('Like', function (imageId) {
@@ -73,6 +110,8 @@
     });
 
     function addVote(imgId, like) {
+        debugger;
+
         var model = {
             imgId: imgId,
             userId: @Model.User.Id,
@@ -96,6 +135,27 @@
                     } else {
                         connection.invoke('AddDislike', "@Model.User.Session.SessionCode", imgId);
                     }
+                    debugger;
+                    var currImgNum = $("#currImgId").text();
+                    var nextImgNum = parseInt(currImgNum) + 1;
+                    @{Model.Images.RemoveAt(0); }
+
+                    $("#currImgId").text(nextImgNum);
+                    var disBtn = $("#dislike-btn-" + imgId);
+                    var likeBtn = $("#like-btn-" + imgId);
+
+
+                    var firstChild = $("#imagesId").children(0)[0];
+                    debugger;
+                    var nextImgId = firstChild.value;
+                    disBtn.attr('id', 'dislike-btn-' + nextImgId);
+                    disBtn.attr('onclick', 'addVote(@Model.Images[0].Id, false)');
+                    likeBtn.attr('id', 'like-btn-' + nextImgId);
+                    likeBtn.attr('onclick', 'addVote(@Model.Images[0].Id, true)');
+                    $("#imageShow").attr('src', 'data:image/png; base64, @Model.Images[0].Base64').load(function () {
+                        this.width;   // Note: $(this).width() will not work for in memory images
+
+                    });
                 }
             },
             error: function () {
@@ -125,4 +185,4 @@
 
     connection.start().then(() => connection.invoke('ReRegister', '@Model.User.Session.SessionCode'));
 
-</script>
+    </script>

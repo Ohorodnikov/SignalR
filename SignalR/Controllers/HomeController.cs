@@ -50,6 +50,9 @@ namespace SignalR.Controllers
                     image.DislikesCount = _dBService.GetVotedUsersForImage(image.Id, sessionId).Count() - image.LikesCount;
                     notVoted.Add(image);                    
                 }
+                var likes = notVoted.Select(i => i.LikesCount).ToList();
+                var x = likes.OrderByDescending(o => o);
+                notVoted = notVoted.OrderByDescending(i => i.LikesCount).ToList();
                 var voteViewModel = new VoteViewModel()
                 {
                     Images = notVoted,
@@ -144,10 +147,9 @@ namespace SignalR.Controllers
 
         [Authorize(Roles = "Teacher")]
         [HttpPost]
-        public JsonResult RemoveImage(string imgId)
+        public JsonResult RemoveImage(int imgId)
         {
-            var user = GetCurrentUser();
-            _dBService.RemoveImage(int.Parse(imgId));
+            _dBService.RemoveImage(imgId);
             return Json("success");
         }
 

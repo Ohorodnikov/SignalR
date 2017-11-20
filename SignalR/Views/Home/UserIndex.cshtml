@@ -6,16 +6,60 @@
 
 <h2>UserIndex</h2>
 
-<div id="loadForm">
-    <input type="file" id="image-file" onmouseover=""/>
-</div>
-<div id="errorPanel" class="alert alert-danger hidden">
-    Image Limit
+<style>
+    [hidden] {
+        display: none !important;
+    }
+</style>
+
+<div class="container">
+    @*<div class="row">*@
+        <div class="col-md-6">
+            <div class="well">
+                <div class="form-group">
+                    <div id="errorPanel" class="alert alert-danger hidden">
+                        Image Limit
+                    </div>
+
+                    <label class="btn btn-block" style="background-color: blueviolet">                    
+                        <span>Choose file</span>
+                        <input type="file" id="image-file" hidden />                     
+                    </label>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="well">
+                <div class="form-group">
+                    <div class="form-inline">
+                        <label>Session Code</label>
+                        <input type="text" id="groupName" class="form-control" />
+                        <input type="hidden" id="sessionCode" />
+                        <input type="button" onclick="register()" value="Register" class="btn btn-success" />                        
+                    </div>
+                </div>
+                
+            </div>
+        </div>
+    @*</div>*@
+    <div class="row">
+        <div class="col-md-6">
+            <div class="panel panel-default well" style="overflow-y: scroll;">
+                <div class="text-center" style="height: 400px">
+                    <div id="imageDiv"></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="panel panel-default well" style="overflow-y: scroll;">
+                <div class="text-center" style="height: 400px">
+                    <div id="chatroom"></div>
+                </div>
+            </div>
+        </div>
+    </div>    
 </div>
 
-<input type="text" id="groupName" />
-<input type="button" onclick="register()" value="Register" />
-<div id="chatroom"></div>
 
 @section Scripts{ 
 <script>
@@ -23,61 +67,45 @@
     var connection = new signalR.HubConnection('/chat');
 
     function register() {
-        var code = document.getElementById("groupName").value;
+        var code = $("#groupName").val();
+        $("#sessionCode").val(code);
         connection.invoke("JoinGroup", code);       
     };
-
-    //Send
-    function sendText(base64, id) {
-        connection.invoke('SendFile', base64, id, name);
-    }
-
+    
     connection.on('Voting', function (sessionCode)
     {
         window.location.href = "@Url.Action("Voting", "Home")?sessionCode="+sessionCode;
     });
 
     //Get
-    connection.on('File', function (base64, id, user) {
-        let userNameElem = document.createElement("b");
-        userNameElem.appendChild(document.createTextNode(user + ': '));
-
+    connection.on('File', function (base64, id) {       
         let elem = document.createElement("div");
-        elem.appendChild(userNameElem);
+        
         var img = document.createElement("img");
-        img.setAttribute("src", "data:image / png;base64, " + data);
+        img.setAttribute("src", "data:image / png;base64, " + base64);
         img.setAttribute("width", 100);
         img.setAttribute("height", 100);
-        //img.onclick = function () { imageClick() };
         elem.appendChild(img);
 
-        var firstElem = document.getElementById("chatroom").firstChild;
-        document.getElementById("chatroom").insertBefore(elem, firstElem);
+        $("#imageDiv").prepend(elem);        
     });
 
-    connection.on('Join', function (message) {
-        
-        // создает элемент <p> для сообщения пользователя
-        let elem = document.createElement("p");
-        
+    connection.on('Join', function (message) {        
+        let elem = document.createElement("p");        
         elem.appendChild(document.createTextNode(message));
-
-        var firstElem = document.getElementById("chatroom").firstChild;
-        document.getElementById("chatroom").insertBefore(elem, firstElem);
+        $("#chatroom").prepend(elem);        
     });
 
     connection.start();
 
-    $('#image-file').change(function () {
-        debugger;
+    $('#image-file').change(function () {        
         var file = this.files[0];
         if (file) {
             var reader = new FileReader();
             reader.readAsDataURL(file);
             reader.onload = function () {
                 var formData = new FormData();
-                formData.append('file', file);
-                debugger;
+                formData.append('file', file);                
                 $.ajax({
                     url: 'Home/SaveImage/',
                     type: 'post',
@@ -96,7 +124,14 @@
                             $('#errorPanel').fadeOut(5000);
                         }
                         else {
-                            sendText(base64, id);
+                            if (data.includes('failed')) {
+                                $('#errorPanel').removeClass('hidden');
+                                $('#errorPanel').css("display", "block");
+                                $('#errorPanel').fadeOut(5000);
+                            }
+                            else {
+                                connection.invoke('SendFile', $("#sessionCode").val(), base64, id);
+                            }
                         }
                     }
                 });

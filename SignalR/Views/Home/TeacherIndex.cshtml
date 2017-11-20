@@ -4,6 +4,7 @@
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
+
 <div class="page-header">
     <h3> @ViewData["Title"]</h3>
 </div>
@@ -14,28 +15,28 @@
 <div class="row"> 
     <div class="col-lg-4">
         <div class="panel panel-default well">
-            <div class="text-center">
+            <div class="text-center" style="height: 100px">
                 <div class="row">
                     <label class="h4">Session Code:</label>
                     <label id="sessionCode" class="h4"></label>
                 </div>
                 <div class="row">
-                    <input type="button" value="Start session" onclick="startSession()" class="btn btn-primary" />
+                    <input type="button" id="startSessionButton" value="Start session" @*onclick="startSession()"*@ class="btn btn-primary" />
                 </div>
             </div>
         </div>
     </div>
     <div class="col-lg-4">
-        <div class="panel panel-default well">
-            <div class="text-center">                
+        <div class="panel panel-default well" style="overflow-y: scroll;">
+            <div class="text-center" style="height: 100px">                
                 <div id="chatroom"></div>
             </div>
         </div>        
     </div>
     <div class="col-lg-4">
         <div class="panel panel-default well">
-            <div class="text-center">
-                <input type="button" value="Start vouting" id="startVoutingButton" onclick="startVouting()" class="btn btn-success disabled" />
+            <div class="text-center" style="height: 100px">
+                <input type="button" value="Start vouting" id="startVoutingButton" @*onclick="startVouting()"*@ class="btn btn-success disabled" />
             </div>
         </div>        
     </div>
@@ -73,7 +74,7 @@
                                 </div>
                             </div>
                             <div class="col-lg-2">
-                                <span id="@("image-" + image.Id)" class="remove-img-val pull-right" onclick="removeImage(@j, @i, @image.Id)">
+                                <span id="@("image-" + image.Id)" class="remove-img-val pull-right" data-tdId=@i data-trId=@j data-imageId=@image.Id>
                                     <span class="glyphicon glyphicon-remove"></span>
                                 </span>
                             </div>
@@ -91,24 +92,38 @@
 
 <script>
 
-    function startSession() {
-        connection.invoke('Start');
-    };
+    $(function () {
+        $("#startVoutingButton").click(function () {
+            connection.invoke("StartVoting", $("#sessionCode").text());
+        });
 
-    function removeImage(trId, tdId, id) {
-        debugger;
-        var model = {
-            imgId: id
-        }
-        $.ajax({
-            url: 'Home/RemoveImage/',
-            type: 'post',
-            dataType: "json",
-            data: model,
-            success: function (result) {
-                var table = document.getElementById("imageTable");
-                table.rows[trId].deleteCell(tdId);
+        $("#startSessionButton").click(function () {
+            connection.invoke('Start');
+        });
+
+        setClickToSpan();
+    });
+
+    function setClickToSpan() {
+        $("span").on('click', '.glyphicon-remove', function () {
+            debugger;
+            var parentData = $(this).parent().data();
+            var imgId = parentData.imageid;
+            var tdId = parentData.tdid;
+            var trId = parentData.trid;
+            var model = {
+                imgId: imgId
             }
+            $.ajax({
+                url: 'Home/RemoveImage/',
+                type: 'post',
+                dataType: "json",
+                data: model,
+                success: function (result) {
+                    var table = $("#imageTable")[0];
+                    table.rows[trId].deleteCell(tdId);
+                }
+            });
         });
     }
 
@@ -125,49 +140,33 @@
 
     var connection = new signalR.HubConnection('/chat');
 
-    function startVouting() {
-        var sessionCode = document.getElementById("sessionCode").textContent;
-        connection.invoke("StartVoting", sessionCode);
-    }
-
     connection.on('Voting', function (sessionCode)
-    {   
+    {
         window.location.href = "@Url.Action("Voting", "Home")?sessionCode="+sessionCode;
     });
 
     connection.on('Join', function (text) {
         let elem = document.createElement("p");
-
-        elem.appendChild(document.createTextNode(message));
-
-        var firstElem = document.getElementById("chatroom").firstChild;
-        document.getElementById("chatroom").insertBefore(elem, firstElem);
-
+        elem.appendChild(document.createTextNode(text));
+        $("#chatroom").prepend(elem);
     });
 
     connection.on('SessionCode', function (code) {
-        document.getElementById("sessionCode").innerHTML = code;
+        $("#sessionCode").text(code);
         $("#startVoutingButton").removeClass("disabled");
     });
 
-    connection.on('File', function (base64, id, user) {
-        let table = document.getElementById("imageTable");
+    connection.on('File', function (base64, id) {        
+        let table = $("#imageTable")[0];
         let rowCount = table.rows.length;
         let lastRow = table.rows[rowCount - 1];
         let lastRowColCount = lastRow.childElementCount;
-        debugger;
 
         let newCell = document.createElement("td");
         newCell.setAttribute("id", "image-cell-" + id);
 
         var imgDiv = document.createElement("div");
         imgDiv.setAttribute("class", "elem-val");
-        imgDiv.onmouseover = function () {
-            showPopupRemove()
-        };
-        imgDiv.onmouseleave = function () {
-            hidePopupRemove()
-        };
 
         var img = document.createElement("img");
         img.setAttribute("src", "data:image / png;base64, " + base64);
@@ -175,36 +174,34 @@
         img.setAttribute("height", 100);
         imgDiv.appendChild(img);
 
-        var span1 = document.createElement("span");
-        span1.setAttribute("id", "image-" + id);
-        span1.setAttribute("class", "remove-img-val");
-
-
         var span2 = document.createElement("span");
         span2.setAttribute("class", "glyphicon glyphicon-remove");
 
+        var span1 = document.createElement("span");
+        span1.setAttribute("id", "image-" + id);
+        span1.setAttribute("class", "remove-img-val");
+        span1.setAttribute("data-imageId", id);
         span1.appendChild(span2);
 
         newCell.appendChild(imgDiv);
         newCell.appendChild(span1);
-        if (lastRowColCount == @maxColCount) {
-            span1.onclick = function () {
-                removeImage(rowCount, 0, id);
-            };
-            let newRow = document.createElement("tr");
 
-            let x = newRow.insertCell(0);
-            x.appendChild(newCell);
+        if (lastRowColCount == @maxColCount) {
+            span1.setAttribute("data-trId", rowCount);
+            span1.setAttribute("data-tdId", 0);
+            
+            let newRow = document.createElement("tr");
+            newRow.insertCell(0).appendChild(newCell);
+            
             table.appendChild(newRow);
         }
         else {
-            span1.onclick = function () {
-                removeImage(rowCount - 1, lastRowColCount, id);
-            };
-            let x = lastRow.insertCell(lastRowColCount)
-            x.appendChild(newCell);
+            span1.setAttribute("data-trId", rowCount - 1);
+            span1.setAttribute("data-tdId", lastRowColCount);
+            
+            lastRow.insertCell(lastRowColCount).appendChild(newCell);           
         }
-
+        setClickToSpan();
     });
 
     connection.start();

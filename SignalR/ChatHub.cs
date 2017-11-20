@@ -124,9 +124,9 @@ namespace SignalR
             await Clients.All.InvokeAsync("Sent", message, name);
         }
 
-        public async Task SendFile(string sessionCode, string base64, string id,  string name)
+        public async Task SendFile(string sessionCode, string base64, string id)
         {
-            await Clients.Group(sessionCode).InvokeAsync("File", base64, id, name);
+            await Clients.Group(sessionCode).InvokeAsync("File", base64, id);
         }
 
         public async Task UpdateCounter(string sessionCode, string newValue)
