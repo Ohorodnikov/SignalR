@@ -32,7 +32,11 @@ namespace SignalR.Controllers
             _dBService = dBService;
         }
         
-        
+        public IActionResult React()
+        {
+            return View();
+        }
+
         public IActionResult Voting(string sessionCode)
         {
             var user = GetCurrentUser();
@@ -181,7 +185,7 @@ namespace SignalR.Controllers
                                 user.Images = _dBService.GetUserImages(user.Id).ToList();
                                 if (user.Images == null)
                                 {
-                                    user.Images = new System.Collections.Generic.List<ImageModel>();
+                                    user.Images = new List<ImageModel>();
                                 }
 
                                 user.Images.Add(image);
@@ -190,7 +194,7 @@ namespace SignalR.Controllers
                                 teacher.Images = _dBService.GetUserImages(teacher.Id).ToList();
                                 if (teacher.Images == null)
                                 {
-                                    teacher.Images = new System.Collections.Generic.List<ImageModel>();
+                                    teacher.Images = new List<ImageModel>();
                                 }
 
                                 if (teacher.Images.Count >= 50)

@@ -1,6 +1,6 @@
 ﻿@model SignalR.ViewModel.VoteViewModel
 @{
-    ViewData["Title"] = "TeacherVouting";
+    ViewData["Title"] = "TeacherVoting";
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
@@ -32,17 +32,19 @@
                     var image = Model.Images[counter];
                     counter++;
                     <td id="@("image-cell-"+ image.Id)">
-                        <div class="elem-val text-center">
-                            <img src="data:image / png;base64, @image.Base64" width="100" height="100" />
+                        <div id="cell">
+                            <div class="elem-val text-center img-hover">
+                                <img src="data:image / png;base64, @image.Base64" width="100" height="100" />
+                            </div>
+                            <span id="@("dislike-" + image.Id)" class="remove-img-val">
+                                <span class="glyphicon glyphicon-remove pull-left"></span>
+                            </span>
+                            <label id="@("dislikeLabel-" + image.Id)" class="pull-left">@image.DislikesCount</label>
+                            <span id="@("like-" + image.Id)" class="remove-img-val">
+                                <span class="glyphicon glyphicon-ok pull-right"></span>
+                            </span>
+                            <label id="@("likeLabel-" + image.Id)" class="pull-right like-count">@image.LikesCount</label>
                         </div>
-                        <span id="@("dislike-" + image.Id)" class="remove-img-val">
-                            <span class="glyphicon glyphicon-remove pull-left"></span>
-                        </span>
-                        <label id="@("dislikeLabel-" + image.Id)" class="pull-left">@image.DislikesCount</label>
-                        <span id="@("like-" + image.Id)" class="remove-img-val">
-                            <span class="glyphicon glyphicon-ok pull-right"></span>
-                        </span>
-                        <label id="@("likeLabel-" + image.Id)" class="pull-right">@image.LikesCount</label>
                     </td>
                 }
             }
@@ -51,6 +53,34 @@
     }
 </table>
 
+<button id="sort">Sort</button>
+
+<style>
+    .img-hover img {
+        -webkit-transition: all .3s ease; /* Safari and Chrome */
+        -moz-transition: all .3s ease; /* Firefox */
+        -o-transition: all .3s ease; /* IE 9 */
+        -ms-transition: all .3s ease; /* Opera */
+        transition: all .3s ease;
+    }
+
+        .img-hover img:hover {
+            -webkit-backface-visibility: hidden;
+            backface-visibility: hidden;
+            -webkit-transform: translateZ(0) scale(2); /* Safari and Chrome */
+            -moz-transform: scale(2); /* Firefox */
+            -ms-transform: scale(2); /* IE 9 */
+            -o-transform: translatZ(0) scale(2); /* Opera */
+            transform: translatZ(0) scale(2);
+        }
+
+
+    .grayscale {
+        -webkit-filter: brightness(1.10) grayscale(100%) contrast(90%);
+        -moz-filter: brightness(1.10) grayscale(100%) contrast(90%);
+        filter: brightness(1.10) grayscale(100%);
+    }
+</style>
 
 <script>
     var connection = new signalR.HubConnection('/chat');
@@ -70,6 +100,57 @@
         value++;
         label.innerHTML = value;
     });
+
+    $("#sort").click(function () {
+        sort();
+    });
+
+    function sort() {
+        var table = $("#imageTable")[0];      
+
+        var rows = table.rows;
+        var cells = [];
+        
+        for(var row of table.rows){
+            for (var cell of row.cells) {
+                cells.push(cell);
+            }            
+        }
+
+        function sortByProperty(array) {
+            return array.sort(function (a, b) {
+                var q = parseInt(a["children"][0]["children"][4].textContent);
+                var w = parseInt(b["children"][0]["children"][4].textContent);
+                return q - w; 
+            });
+        }
+        var sortedByName = sortByProperty(cells);
+
+
+        var table = document.createElement("table");
+        table.setAttribute('id', 'imageTable');
+
+        var rowsCount = parseInt(sortedByName.length / @maxColCount + 1);
+
+        var counter = 0;
+        for (var i = 0; i < rowsCount; i++) {
+            var row = document.createElement("tr");
+            for (var j = 0; j < @maxColCount; j++) {
+                var cell = sortedByName[counter];
+                row.insertCell(j).appendChild(cell);
+                counter++;
+            }
+            table.appendChild(row);
+        }
+
+        $("#body").append(table);
+        $("#imageTable")[0].remove();
+        
+        
+        debugger;
+        
+    }
+
 
     connection.start().then(() => connection.invoke('ReRegister', '@Model.User.Session.SessionCode'));
 </script>

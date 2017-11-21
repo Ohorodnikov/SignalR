@@ -1,7 +1,9 @@
 ﻿@model SignalR.ViewModel.VoteViewModel
 @{
-    ViewData["Title"] = "UserVouting";
+    ViewData["Title"] = "UserVoting";
     Layout = "~/Views/Shared/_Layout.cshtml";
+    <script type="text/javascript" src="~/js/jquery.bighover.js"></script>
+
 }
 
 <h2>UserVouting</h2>
@@ -74,7 +76,7 @@
             <input type="hidden" value="@Model.Images[0].Id" />
             <label id="currImgId">1</label> / <label>@Model.Images.Count</label>
             <br />
-            <img id="imageShow" src="data:image/png;base64, @Model.Images[0].Base64" width="400" height="400" />
+            <img id="imageShow" src="data:image/png;base64, @Model.Images[0].Base64" width="400" height="400"/>
         </div>
         <div>
             <button id="dislike-btn-@Model.Images[0].Id" class="btn btn-danger pull-left" onclick="addVote(@Model.Images[0].Id, false)">Dislike</button>
@@ -85,7 +87,33 @@
 </div>
 
 
+<div class="modal fade" id="imageModal" role="dialog">
+    <div class="modal-dialog modal-lg">
+
+        <!-- Modal content-->
+        <div class="modal-content">            
+            <div class="modal-body" style="padding:40px 50px;">
+                <img id="imageOnModal"/>
+            </div>
+            <div class="modal-footer">
+                <button type="submit" class="btn btn-danger btn-default pull-left" data-dismiss="modal">
+                    <span class="glyphicon glyphicon-remove"></span> Cancel
+                </button>                
+            </div>
+        </div>
+
+    </div>
+</div>
+
+
 <script>
+
+    
+
+
+
+
+
     var connection = new signalR.HubConnection('/chat');
 
     connection.on('Like', function (imageId) {
@@ -101,6 +129,36 @@
         value++;
         label.innerHTML = value;
     });
+
+    $(document).ready(function ()
+    {
+        
+    });
+
+    $(function () {
+        
+        //setClickOnImage();
+        
+    });
+
+    function setClickOnImage() {        
+        $("#imageShow").click(function () {
+            var image = $(this).attr('src');
+            var x = $(".modal-body").first().outerWidth();
+            var e = $(".modal-body").first().first();
+            var q = $(".modal-body").first().innerWidth();
+            //var w = $(".modal-body").first().width();
+            console.log($(".modal-body")[0]);
+            //var w = $(".modal-body")[0].width();
+            debugger;
+            $("#imageOnModal").attr('src', image).load(function () {
+                this.width = $("#imageModal").first().outerWidth();   // Note: $(this).width() will not work for in memory images
+                //this.height = $(".modal-body").first().height() - 50;
+            });
+            $("#imageModal").modal();
+        });
+
+    };
 
     function addVote(imgId, like) {
         var model = {
@@ -126,7 +184,6 @@
                     } else {
                         connection.invoke('AddDislike', "@Model.User.Session.SessionCode", imgId);
                     }
-                    debugger;
                     var currImgNum = $("#currImgId").text();
                     var nextImgNum = parseInt(currImgNum) + 1;
 
@@ -134,16 +191,14 @@
 
                     }
                     else {
-
                         $("#currImgId").text(nextImgNum);
                         var disBtn = $("#dislike-btn-" + imgId);
                         var likeBtn = $("#like-btn-" + imgId);
 
                         var firstChild = $("#imagesId").children('').first();
-                        debugger;
-                        var data = firstChild.data();
                         var nextImgId = firstChild.data().id;
                         var nextImgBase64 = firstChild.data().base64;
+
                         disBtn.attr('id', 'dislike-btn-' + nextImgId);
                         disBtn.attr('onclick', 'addVote(' + nextImgId+', false)');
                         likeBtn.attr('id', 'like-btn-' + nextImgId);
@@ -152,7 +207,10 @@
                             this.width;   // Note: $(this).width() will not work for in memory images
 
                         });
+                        //$("#imageShow").attr('onclick', 'zoom()');
                         firstChild.remove();
+                        //$("#imageShow").unbind('click');
+                        //setClickOnImage();
                     }
                 }
             },

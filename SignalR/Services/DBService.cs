@@ -16,10 +16,15 @@ namespace SignalR.Services
             _context = context;
         }
 
-        public void SaveSession(Session session)
+        public bool SaveSession(Session session)
         {
+            if (session == null || string.IsNullOrEmpty(session.SessionCode))
+            {
+                throw new ArgumentException();
+            }
             _context.Session.Add(session);
             _context.SaveChanges();
+            return true;
         }
 
         public void SaveSessionUser(SessionUser sessionUser)
@@ -116,7 +121,7 @@ namespace SignalR.Services
         void RemoveImage(int imgId);
         ImageModel GetImage(int imgId);
         void SaveUser(ApplicationUser user);
-        void SaveSession(Session session);
+        bool SaveSession(Session session);
         void SaveSessionUser(SessionUser sessionUser);
         Session SearchSession(string sessionCode);
         IEnumerable<SessionUser> SearchSessionUsers(int sessionId);
