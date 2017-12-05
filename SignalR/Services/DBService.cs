@@ -109,15 +109,28 @@ namespace SignalR.Services
             return _context.SessionUser.FirstOrDefault(u => u.SessionId == SearchSession(sessionCode).Id && u.UserId == userId);
         }
 
+        public IEnumerable<SessionUser> GetAllSessionUsers(string sessionCode)
+        {
+            return _context.SessionUser.Where(u => u.SessionId == SearchSession(sessionCode).Id);
+        }
+
         public ApplicationUser GetUser(string userId)
         {
             return _context.Users.FirstOrDefault(u => u.Id == userId);
         }
 
+        public void UpdateImage(ImageModel image)
+        {
+            _context.ImageModel.Update(image);
+            _context.SaveChanges();
+        }
+
+
     }
 
     public interface IDBService
     {
+        IEnumerable<SessionUser> GetAllSessionUsers(string sessionCode);
         void RemoveImage(int imgId);
         ImageModel GetImage(int imgId);
         void SaveUser(ApplicationUser user);
@@ -133,5 +146,6 @@ namespace SignalR.Services
         SessionUser GetSessionUser(string sessionCode, string userId);
         ApplicationUser GetUser(string userId);
         void UpdateSessionUser(SessionUser sessionUser);
+        void UpdateImage(ImageModel image);
     }
 }

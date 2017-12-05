@@ -14,26 +14,133 @@ using SignalR.ViewModel;
 using System.Threading.Tasks;
 using SignalR.Services;
 using System.Collections.Generic;
+using Microsoft.Extensions.Localization;
+using Microsoft.AspNetCore.Localization;
 
 namespace SignalR.Controllers
 {
+    public class CommentModel
+    {
+        public int Id { get; set; }
+        public string Author { get; set; }
+        public string Text { get; set; }
+    }
     [Authorize]
     public class HomeController : Controller
     {
         private readonly IHostingEnvironment _appEnvironment;
         private readonly UserManager<ApplicationUser> _manager;
         private readonly IDBService _dBService;
-        public HomeController(IHostingEnvironment appEnvironment, UserManager<ApplicationUser> manager, IDBService dBService)
+        private readonly IStringLocalizer<HomeController> _localizer;
+        static HomeController()
+        {
+            _comments = new List<CommentModel>
+            {
+                new CommentModel
+                {
+                    Id = 1,
+                    Author = "Daniel OlOlO Nigro",
+                    Text = "Hello ReactJS.NET World!"
+                },
+                new CommentModel
+                {
+                    Id = 2,
+                    Author = "Pete Hunt",
+                    Text = "This is one comment"
+                },
+                new CommentModel
+                {
+                    Id = 3,
+                    Author = "Jordan Walke",
+                    Text = "This is *another* comment"
+                },
+            };
+        }
+        public HomeController(IHostingEnvironment appEnvironment, UserManager<ApplicationUser> manager, IDBService dBService, 
+            IStringLocalizer<HomeController> localizer)
         {
             _appEnvironment = appEnvironment;
-
             _manager = manager;
-
             _dBService = dBService;
+            _localizer = localizer;
         }
-        
-        public IActionResult React()
+
+        [HttpPost]
+        public IActionResult SetLanguage(string culture, string returnUrl)
         {
+            Response.Cookies.Append(
+                CookieRequestCultureProvider.DefaultCookieName,
+                CookieRequestCultureProvider.MakeCookieValue(new RequestCulture(culture)),
+                new CookieOptions { Expires = DateTimeOffset.UtcNow.AddYears(1) }
+            );
+
+            return LocalRedirect(returnUrl);
+        }
+
+        private void AddLocalText()
+        {
+            ViewData["Contact"] = _localizer["Contact"];
+            ViewData["Home"] = _localizer["Home"];
+            ViewData["About"] = _localizer["About"];
+        }
+
+        [Route("comments/new")]
+        [HttpPost]
+        public ActionResult AddComment(CommentModel comment)
+        {
+            // Create a fake ID for this comment
+            comment.Id = _comments.Count + 1;
+            _comments.Add(comment);
+            return Content("Success :)");
+        }
+
+        private static List<CommentModel> _comments;
+
+        [Route("comments")]
+        public IActionResult Comments()
+        {
+            //var sessions = _dBService.GetAllSessionUsers(code).ToList();
+            //foreach (var s in sessions)
+            //{
+            //    s.Session = null;
+            //}
+
+           
+            return Json(_comments);
+        }
+
+        public IActionResult Image(int id)
+        {
+            //AddLocalText();
+            var img = _dBService.GetImage(id);
+            return View(img);            
+        }
+
+        [HttpPost]
+        public IActionResult Image(int id, string description)
+        {
+            try
+            {
+                var img = _dBService.GetImage(id);
+                img.Description = description;
+                _dBService.UpdateImage(img);
+                return Json("success");
+            }
+            catch (Exception)
+            {
+
+                return Json("error");
+            }
+            
+        }
+
+        public IActionResult React(string code)
+        {
+            var sessions = _dBService.GetAllSessionUsers(code).ToList();
+            foreach (var s in sessions)
+            {
+                s.Session = null;
+            }
             return View();
         }
 
@@ -106,8 +213,9 @@ namespace SignalR.Controllers
 
         public async Task<IActionResult> Index()
         {
+            //AddLocalText();
             var user = GetCurrentUser();
-            var images = 
+            
             user.Images = _dBService.GetUserImages(user.Id).ToList();
             
             var roles = (await _manager.GetRolesAsync(user)).ToList();
@@ -135,6 +243,7 @@ namespace SignalR.Controllers
         [HttpGet]
         public IActionResult Images()
         {
+            //AddLocalText();
             var user = GetCurrentUser();
             var userViewModel = new UserViewModel()
             {
@@ -228,13 +337,14 @@ namespace SignalR.Controllers
         public IActionResult About()
         {
             ViewData["Message"] = "Your application description page.";
-
+            //AddLocalText();
             return View();
         }
 
         public IActionResult Contact()
-        {
-            ViewData["Message"] = "Your contact page.";
+        {                       
+            ViewData["Message"] = _localizer["Contact"];
+            //AddLocalText();
 
             return View();
         }

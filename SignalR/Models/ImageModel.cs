@@ -12,6 +12,8 @@ namespace SignalR.Models
         public int LikesCount { get; set; }
         public int DislikesCount { get; set; }
 
+        public string Description { get; set; }
+
         public List<VoteInfo> VotedUsers { get; } = new List<VoteInfo>();
 
         public string ApplicationUserId { get; set; }

@@ -1,0 +1,14 @@
+﻿
+@{
+    ViewData["Title"] = "Image";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@Html.React("Grid", new
+{
+    data = Model,
+    submitUrl = Url.Action("Image", "Home"),
+    method = "post"
+})
+<script src="@Url.Content("~/js/image.jsx")"></script>
+@Html.ReactInitJavaScript()

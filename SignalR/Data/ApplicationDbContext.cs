@@ -31,6 +31,8 @@ namespace SignalR.Data
                 entity.HasKey(e => e.Id);
 
                 entity.Property(e => e.Base64);
+
+                entity.Property(e => e.Description);
                 
                 entity.HasOne(d => d.User)
                     .WithMany(p => p.Images)

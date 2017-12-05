@@ -36,6 +36,14 @@
         "runtime": {
           "SignalR.dll": {}
         },
+        "resources": {
+          "en-US/SignalR.resources.dll": {
+            "locale": "en-US"
+          },
+          "ru-RU/SignalR.resources.dll": {
+            "locale": "ru-RU"
+          }
+        },
         "compile": {
           "SignalR.dll": {}
         }

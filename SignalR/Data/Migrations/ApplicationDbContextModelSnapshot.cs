@@ -190,6 +190,8 @@ namespace SignalR.Data.Migrations
 
                     b.Property<string>("Base64");
 
+                    b.Property<string>("Description");
+
                     b.Property<int>("DislikesCount");
 
                     b.Property<int>("LikesCount");

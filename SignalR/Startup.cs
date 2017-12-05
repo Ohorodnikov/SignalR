@@ -13,6 +13,12 @@ using SignalR.Models;
 using SignalR.Services;
 using Microsoft.AspNetCore.Http;
 using React.AspNet;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
+using Microsoft.AspNetCore.Routing;
+using Microsoft.AspNetCore.Mvc.Razor;
+using System.Globalization;
+using Microsoft.AspNetCore.Localization;
 
 namespace SignalR
 {
@@ -39,12 +45,36 @@ namespace SignalR
             services.AddTransient<IEmailSender, EmailSender>();
             services.AddTransient<IDBService, DBService>();
             services.AddSignalR();
-            services.AddMvc();
+            services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
+            services.AddReact();
+            string enUSCulture = "en-US";
+
+            services.Configure<RequestLocalizationOptions>(options =>
+            {
+                var supportedCultures = new[]
+                {
+                    new CultureInfo(enUSCulture),
+                    new CultureInfo("ru-RU")
+                };
+
+                options.DefaultRequestCulture = new RequestCulture(culture: enUSCulture, uiCulture: enUSCulture);
+                options.SupportedCultures = supportedCultures;
+                options.SupportedUICultures = supportedCultures;
+
+                options.RequestCultureProviders.Insert(0, new CustomRequestCultureProvider(async context =>
+                {
+                    // My custom request culture logic
+                    return new ProviderCultureResult("en");
+                }));
+            });
+            services.AddLocalization(options => options.ResourcesPath = "Resources");
+            services.AddMvc()
+                .AddViewLocalization(LanguageViewLocationExpanderFormat.Suffix)
+                .AddDataAnnotationsLocalization();
             services.AddSession(options => {
                 options.IdleTimeout = TimeSpan.FromMinutes(30);
             });
-            services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
-            services.AddReact();
+            
 
             return services.BuildServiceProvider();
         }
@@ -69,8 +99,14 @@ namespace SignalR
                 // add all the necessary JavaScript files here. This includes
                 // your components as well as all of their dependencies.
                 // See http://reactjs.net/ for more information. Example:
-                //config
-                //  .AddScript("~/Scripts/First.jsx")
+                config
+                  .AddScript("~/js/image.jsx")
+                  .SetJsonSerializerSettings(new JsonSerializerSettings
+                  {
+                      StringEscapeHandling = StringEscapeHandling.EscapeHtml,
+                      ContractResolver = new CamelCasePropertyNamesContractResolver()
+                  });
+
                 //  .AddScript("~/Scripts/Second.jsx");
 
                 // If you use an external build too (for example, Babel, Webpack,
@@ -82,6 +118,8 @@ namespace SignalR
                 //  .AddScriptWithoutTransform("~/Scripts/bundle.server.js");
             });
 
+            
+
             app.UseStaticFiles();
 
             app.UseAuthentication();
@@ -90,12 +128,38 @@ namespace SignalR
             {
                 routes.MapHub<ChatHub>("chat");
             });
-            app.UseMvc(routes =>
+
+            var supportedCultures = new List<CultureInfo>
             {
-                routes.MapRoute(
-                    name: "default",
-                    template: "{controller=Home}/{action=Index}/{id?}");
-            });
+                new CultureInfo("en-US"),
+                new CultureInfo("ru-RU")
+            };
+
+            var options = new RequestLocalizationOptions
+            {
+                DefaultRequestCulture = new RequestCulture("en-US"),
+                SupportedCultures = supportedCultures,
+                SupportedUICultures = supportedCultures,
+            };
+
+            app.UseRequestLocalization(options);
+
+            app.UseMvcWithDefaultRoute();
+            //app.UseMvc(routes =>
+            //{
+            //    routes.MapRoute
+            //    //(
+            //    //    "default", 
+            //    //    "{lang}/{controller}/{action}/{id?}", 
+            //    //    new { controller = "Home", action = "Index"}, 
+            //    //    new { lang = @"(\w{2})|(\w{2}-\w{2})" });
+            //    //(
+            //    //    name: "default",
+            //    //    constraints: new { lang = @"(\w{2})|(\w{2}-\w{2})" },
+            //    //    template: "{lang}/{controller=Home}/{action=Index}/{id?}");
+
+
+            //});
 
             
         }
