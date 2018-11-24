@@ -22,6 +22,7 @@ namespace SignalR.Controllers
     {
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly SignInManager<ApplicationUser> _signInManager;
+        private readonly RoleManager<IdentityRole> _roleManager;
         private readonly IEmailSender _emailSender;
         private readonly ILogger _logger;
 
@@ -29,11 +30,13 @@ namespace SignalR.Controllers
             UserManager<ApplicationUser> userManager,
             SignInManager<ApplicationUser> signInManager,
             IEmailSender emailSender,
+            RoleManager<IdentityRole> roleManager,
             ILogger<AccountController> logger)
         {
             _userManager = userManager;
             _signInManager = signInManager;
             _emailSender = emailSender;
+            _roleManager = roleManager;
             _logger = logger;
         }
 
@@ -234,6 +237,15 @@ namespace SignalR.Controllers
                     Email = model.Email                    
                 };
                 var result = await _userManager.CreateAsync(user, model.Password);
+                var r = await _roleManager.RoleExistsAsync("Teacher");
+                if (!r)
+                {
+                    var role = new IdentityRole()
+                    {
+                        Name = "Teacher"
+                    };
+                    await _roleManager.CreateAsync(role);
+                }
                 var x = await _userManager.AddToRoleAsync(user, "Teacher");
                 if (result.Succeeded && x.Succeeded)
                 {
@@ -264,6 +276,15 @@ namespace SignalR.Controllers
             {
                 var user = new ApplicationUser { UserName = model.Email, Email = model.Email };
                 var result = await _userManager.CreateAsync(user, model.Password);
+                var r = await _roleManager.RoleExistsAsync("Student");
+                if (!r)
+                {
+                    var role = new IdentityRole()
+                    {
+                        Name = "Student"
+                    };
+                    await _roleManager.CreateAsync(role);
+                }
                 var x = await _userManager.AddToRoleAsync(user, "Student");
                 if (result.Succeeded)
                 {

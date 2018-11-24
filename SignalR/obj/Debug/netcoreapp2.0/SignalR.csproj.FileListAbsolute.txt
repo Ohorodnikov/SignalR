@@ -1,4 +1,3 @@
-C:\Data\Andersen\SignalR\SignalR\obj\Debug\netcoreapp2.0\SignalR.csprojResolveAssemblyReference.cache
 C:\Data\Andersen\SignalR\SignalR\bin\Debug\netcoreapp2.0\SignalR.deps.json
 C:\Data\Andersen\SignalR\SignalR\bin\Debug\netcoreapp2.0\SignalR.runtimeconfig.json
 C:\Data\Andersen\SignalR\SignalR\bin\Debug\netcoreapp2.0\SignalR.runtimeconfig.dev.json
@@ -6,9 +5,14 @@ C:\Data\Andersen\SignalR\SignalR\bin\Debug\netcoreapp2.0\SignalR.dll
 C:\Data\Andersen\SignalR\SignalR\bin\Debug\netcoreapp2.0\SignalR.pdb
 C:\Data\Andersen\SignalR\SignalR\bin\Debug\netcoreapp2.0\en-US\SignalR.resources.dll
 C:\Data\Andersen\SignalR\SignalR\bin\Debug\netcoreapp2.0\ru-RU\SignalR.resources.dll
+C:\Data\Andersen\SignalR\SignalR\obj\Debug\netcoreapp2.0\SignalR.csprojResolveAssemblyReference.cache
 C:\Data\Andersen\SignalR\SignalR\obj\Debug\netcoreapp2.0\SignalR.Resources.Controllers.HomeController.en-US.resources
 C:\Data\Andersen\SignalR\SignalR\obj\Debug\netcoreapp2.0\SignalR.Resources.Controllers.HomeController.ru-RU.resources
-C:\Data\Andersen\SignalR\SignalR\obj\Debug\netcoreapp2.0\SignalR.csproj.GenerateResource.Cache
+C:\Data\Andersen\SignalR\SignalR\obj\Debug\netcoreapp2.0\SignalR.Resources.Views.Shared._Layout.en-US.resources
+C:\Data\Andersen\SignalR\SignalR\obj\Debug\netcoreapp2.0\SignalR.Resources.Views.Shared._Layout.ru-RU.resources
+C:\Data\Andersen\SignalR\SignalR\obj\Debug\netcoreapp2.0\SignalR.Resources.Views.Shared._LoginPartial.en-US.resources
+C:\Data\Andersen\SignalR\SignalR\obj\Debug\netcoreapp2.0\SignalR.Resources.Views.Shared._LoginPartial.ru-RU.resources
+C:\Data\Andersen\SignalR\SignalR\obj\Debug\netcoreapp2.0\SignalR.csproj.GenerateResource.cache
 C:\Data\Andersen\SignalR\SignalR\obj\Debug\netcoreapp2.0\SignalR.csproj.CoreCompileInputs.cache
 C:\Data\Andersen\SignalR\SignalR\obj\Debug\netcoreapp2.0\UserSecretsAssemblyInfo.cs
 C:\Data\Andersen\SignalR\SignalR\obj\Debug\netcoreapp2.0\SignalR.AssemblyInfoInputs.cache
@@ -17,7 +21,3 @@ C:\Data\Andersen\SignalR\SignalR\obj\Debug\netcoreapp2.0\en-US\SignalR.resources
 C:\Data\Andersen\SignalR\SignalR\obj\Debug\netcoreapp2.0\ru-RU\SignalR.resources.dll
 C:\Data\Andersen\SignalR\SignalR\obj\Debug\netcoreapp2.0\SignalR.dll
 C:\Data\Andersen\SignalR\SignalR\obj\Debug\netcoreapp2.0\SignalR.pdb
-C:\Data\Andersen\SignalR\SignalR\obj\Debug\netcoreapp2.0\SignalR.Resources.Views.Shared._Layout.en-US.resources
-C:\Data\Andersen\SignalR\SignalR\obj\Debug\netcoreapp2.0\SignalR.Resources.Views.Shared._Layout.ru-RU.resources
-C:\Data\Andersen\SignalR\SignalR\obj\Debug\netcoreapp2.0\SignalR.Resources.Views.Shared._LoginPartial.en-US.resources
-C:\Data\Andersen\SignalR\SignalR\obj\Debug\netcoreapp2.0\SignalR.Resources.Views.Shared._LoginPartial.ru-RU.resources
